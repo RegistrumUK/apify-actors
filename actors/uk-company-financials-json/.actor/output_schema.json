@@ -1,0 +1,18 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "Output of UK Company Financials (Companies House accounts as JSON)",
+  "properties": {
+    "overview": {
+      "type": "string",
+      "title": "Overview",
+      "description": "One row per company, key columns",
+      "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
+    },
+    "results": {
+      "type": "string",
+      "title": "All fields",
+      "description": "Every field for every company, including not-found rows",
+      "template": "{{links.apiDefaultDatasetUrl}}/items"
+    }
+  }
+}
