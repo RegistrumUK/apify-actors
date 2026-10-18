@@ -1,0 +1,24 @@
+{
+  "actorSpecification": 1,
+  "views": {
+    "overview": {
+      "title": "Overview",
+      "transformation": {
+        "fields": [
+          "company_number",
+          "company_name",
+          "verification_status",
+          "people_to_verify",
+          "any_overdue",
+          "earliest_deadline",
+          "days_to_earliest_deadline",
+          "confirmation_statement_next_due",
+          "registrum_url"
+        ]
+      },
+      "display": {
+        "component": "table"
+      }
+    }
+  }
+}

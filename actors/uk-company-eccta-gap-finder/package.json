@@ -1,0 +1,16 @@
+{
+  "name": "uk-company-eccta-gap-finder",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.7.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

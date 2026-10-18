@@ -1,0 +1,21 @@
+{
+  "title": "UK Company Financials (Companies House accounts as JSON)",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "companyNumbers": {
+      "title": "Company numbers",
+      "type": "array",
+      "editor": "stringList",
+      "description": "UK company numbers, one per line - e.g. 07420328 or SC123456. Leading zeros may be dropped. Up to 500 companies per run; split bigger lists into several runs.",
+      "prefill": [
+        "07420328",
+        "13339241",
+        "00445790"
+      ]
+    }
+  },
+  "required": [
+    "companyNumbers"
+  ]
+}

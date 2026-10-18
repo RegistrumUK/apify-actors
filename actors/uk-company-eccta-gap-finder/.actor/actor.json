@@ -1,0 +1,13 @@
+{
+  "actorSpecification": 1,
+  "name": "uk-company-eccta-gap-finder",
+  "title": "UK Company ECCTA Identity Verification Checker",
+  "description": "Check UK companies for directors and PSCs who still have to verify their identity with Companies House under ECCTA: names, deadlines, days left and overdue flags, one row per company.",
+  "version": "1.0",
+  "buildTag": "latest",
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": "./dataset_schema.json"
+  }
+}

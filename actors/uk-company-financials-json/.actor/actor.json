@@ -1,0 +1,13 @@
+{
+  "actorSpecification": 1,
+  "name": "uk-company-financials-json",
+  "title": "UK Company Financials (Companies House accounts as JSON)",
+  "description": "Turnover, profit, net assets, cash, employees and more parsed from UK companies' latest filed iXBRL accounts at Companies House, with the prior year, profile and current directors, one flat row per company.",
+  "version": "1.0",
+  "buildTag": "latest",
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": "./dataset_schema.json"
+  }
+}

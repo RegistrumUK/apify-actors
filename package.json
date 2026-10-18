@@ -1,0 +1,11 @@
+{
+  "name": "registrum-apify-actors",
+  "private": true,
+  "type": "module",
+  "description": "Apify Store actors over the Registrum UK company data API",
+  "scripts": {
+    "test": "node --test",
+    "sync": "node scripts/sync-shared.js"
+  },
+  "license": "MIT"
+}
