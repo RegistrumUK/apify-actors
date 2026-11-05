@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MAX_COMPANIES_PER_RUN, normalizeCompanyNumbers, fetchBundle, processCompanies } from '../shared/registrum.js';
+import { MAX_COMPANIES_PER_RUN, MAX_RETRY_AFTER_MS, normalizeCompanyNumbers, fetchBundle, processCompanies } from '../shared/registrum.js';
 import { fakeFetch } from './helpers.js';
 
 const opts = (f, extra = {}) => ({ apiKey: 'k', include: ['profile'], userAgent: 'u', fetchImpl: f, retryDelayMs: 0, ...extra });
@@ -52,6 +52,30 @@ test('fetchBundle gives up with an error after repeated failures', async () => {
 	const f = fakeFetch({ script: [500, 500, 500, 500] });
 	const r = await fetchBundle('07420328', opts(f));
 	assert.equal(r.status, 'error');
+});
+
+// CH-Api#206: a shed 503 says when capacity returns. Retrying after 2s/4s/6s instead tripled the
+// load on a saturated window (5365 shed 503s for ~2000 companies on 2026-11-03).
+test('fetchBundle waits the server-stated Retry-After before retrying a shed 503', async () => {
+	const f = fakeFetch({ script: [{ status: 503, headers: { 'Retry-After': '45' } }] });
+	const sleeps = [];
+	const r = await fetchBundle('07420328', opts(f, { retryDelayMs: 2000, sleepImpl: async (ms) => { sleeps.push(ms); } }));
+	assert.equal(r.status, 'ok');
+	assert.deepEqual(sleeps, [45000]);
+});
+
+test('fetchBundle caps an absurd Retry-After so a run cannot hang', async () => {
+	const f = fakeFetch({ script: [{ status: 429, headers: { 'Retry-After': '99999' } }] });
+	const sleeps = [];
+	await fetchBundle('07420328', opts(f, { sleepImpl: async (ms) => { sleeps.push(ms); } }));
+	assert.deepEqual(sleeps, [MAX_RETRY_AFTER_MS]);
+});
+
+test('fetchBundle falls back to linear backoff without a usable Retry-After', async () => {
+	const f = fakeFetch({ script: [500, { status: 503, headers: { 'Retry-After': 'soon' } }] });
+	const sleeps = [];
+	await fetchBundle('07420328', opts(f, { retryDelayMs: 2000, sleepImpl: async (ms) => { sleeps.push(ms); } }));
+	assert.deepEqual(sleeps, [2000, 4000]);
 });
 
 test('fetchBundle does not retry an auth failure', async () => {

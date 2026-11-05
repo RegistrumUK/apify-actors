@@ -30,11 +30,26 @@ export function normalizeCompanyNumbers(raw) {
 
 const RETRYABLE = (status) => status === 429 || status >= 500;
 
-export async function fetchBundle(number, { apiKey, include, userAgent, fetchImpl = fetch, retries = 3, retryDelayMs = 2000 }) {
+// A shed 503 / 429 carries Retry-After: when Companies House capacity returns. Honour it, capped so
+// a bad header cannot hang a run. Retrying on our own 2s/4s/6s clock instead tripled the load on a
+// saturated window (CH-Api#206: 5365 shed 503s for ~2000 companies in one day).
+export const MAX_RETRY_AFTER_MS = 120_000;
+
+function retryAfterMs(res) {
+	const seconds = Number(res?.headers?.get?.('retry-after'));
+	if (!Number.isFinite(seconds) || seconds <= 0) return null;
+	return Math.min(seconds * 1000, MAX_RETRY_AFTER_MS);
+}
+
+const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+export async function fetchBundle(number, { apiKey, include, userAgent, fetchImpl = fetch, retries = 3, retryDelayMs = 2000, sleepImpl = defaultSleep }) {
 	const url = `${API_BASE}/v1/company/${encodeURIComponent(number)}/bundle?include=${encodeURIComponent(include.join(','))}`;
 	let last = 'no response';
+	let serverWaitMs = null;
 	for (let attempt = 0; attempt <= retries; attempt++) {
-		if (attempt > 0) await new Promise((r) => setTimeout(r, retryDelayMs * attempt));
+		if (attempt > 0) await sleepImpl(serverWaitMs ?? retryDelayMs * attempt);
+		serverWaitMs = null;
 		let res;
 		try {
 			res = await fetchImpl(url, { headers: { 'X-API-Key': apiKey, 'User-Agent': userAgent, Accept: 'application/json' } });
@@ -45,6 +60,7 @@ export async function fetchBundle(number, { apiKey, include, userAgent, fetchImp
 		if (res.status === 404) return { status: 'not_found' };
 		if (res.ok) return { status: 'ok', data: (await res.json()).data };
 		last = `HTTP ${res.status}`;
+		serverWaitMs = retryAfterMs(res);
 		if (!RETRYABLE(res.status)) break;
 	}
 	return { status: 'error', message: last };
